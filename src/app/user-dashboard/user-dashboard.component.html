@@ -48,6 +48,14 @@
         </select>
       </div>
 
+      <div class="filter-group">
+        <label for="status">Status:</label>
+        <select id="status" [(ngModel)]="selectedStatus" (ngModelChange)="applyFiltersAndSort()">
+          <option value="all">All Statuses</option>
+          <option *ngFor="let status of statuses" [value]="status">{{ status | titlecase }}</option>
+        </select>
+      </div>
+
       <button class="btn btn-secondary" (click)="resetFilters()">Reset Filters</button>
     </div>
   </div>

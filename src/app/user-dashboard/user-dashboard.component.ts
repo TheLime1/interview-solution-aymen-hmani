@@ -79,6 +79,7 @@ export class UserDashboardComponent implements OnInit {
   searchTerm: string = '';
   selectedRole: string = 'all';
   selectedDepartment: string = 'all';
+  selectedStatus: User['status'] | 'all' = 'all';
 
   // Sorting
   sortField: keyof User = 'name';
@@ -232,6 +233,11 @@ export class UserDashboardComponent implements OnInit {
     // Apply department filter
     if (this.selectedDepartment !== 'all') {
       filtered = filtered.filter(user => user.department === this.selectedDepartment);
+    }
+
+    // Apply status filter
+    if (this.selectedStatus !== 'all') {
+      filtered = filtered.filter(user => user.status === this.selectedStatus);
     }
 
     // Apply sorting
@@ -412,6 +418,7 @@ export class UserDashboardComponent implements OnInit {
     this.searchTerm = '';
     this.selectedRole = 'all';
     this.selectedDepartment = 'all';
+    this.selectedStatus = 'all';
     this.applyFiltersAndSort();
   }
 

@@ -73,4 +73,26 @@ describe('UserDashboardComponent', () => {
     expect(component.users[0]).toEqual(originalUser);
     expect(component.showForm).toBeTrue();
   });
+
+  it('should filter users by active status', () => {
+    component.selectedStatus = 'active';
+
+    component.applyFiltersAndSort();
+
+    expect(component.displayedUsers.length).toBe(component.activeUsers);
+    expect(component.displayedUsers.every(user => user.status === 'active')).toBeTrue();
+  });
+
+  it('should filter users by inactive status and reset status filters', () => {
+    component.selectedStatus = 'inactive';
+    component.applyFiltersAndSort();
+
+    expect(component.displayedUsers.length).toBe(component.inactiveUsers);
+    expect(component.displayedUsers.every(user => user.status === 'inactive')).toBeTrue();
+
+    component.resetFilters();
+
+    expect(component.selectedStatus).toBe('all');
+    expect(component.displayedUsers.length).toBe(component.users.length);
+  });
 });
