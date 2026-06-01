@@ -1,6 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators
+} from '@angular/forms';
 
 // User interface
 interface User {
@@ -13,14 +22,47 @@ interface User {
   department: string;
 }
 
+type UserDraft = Omit<User, 'status'> & {
+  status: User['status'] | '';
+};
+
+type UserForm = FormGroup<{
+  name: FormControl<string>;
+  email: FormControl<string>;
+  role: FormControl<string>;
+  department: FormControl<string>;
+  status: FormControl<User['status'] | ''>;
+}>;
+
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './user-dashboard.component.html',
   styleUrl: './user-dashboard.component.css'
 })
 export class UserDashboardComponent implements OnInit {
+  private readonly trimmedRequiredValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+
+    if (typeof value === 'string' && value.trim().length === 0) {
+      return { required: true };
+    }
+
+    return null;
+  };
+
+  private readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private readonly emailFormatValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      return null;
+    }
+
+    return this.emailPattern.test(value.trim()) ? null : { pattern: true };
+  };
+
   // All users data
   users: User[] = [];
 
@@ -45,7 +87,30 @@ export class UserDashboardComponent implements OnInit {
   // Form for adding/editing users
   showForm: boolean = false;
   isEditing: boolean = false;
-  currentUser!: User;
+  formSubmitted: boolean = false;
+  currentUser!: UserDraft;
+  userForm: UserForm = new FormGroup({
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [this.trimmedRequiredValidator]
+    }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [this.trimmedRequiredValidator, this.emailFormatValidator]
+    }),
+    role: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    }),
+    department: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    }),
+    status: new FormControl<User['status'] | ''>('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    })
+  });
 
   // Statistics
   totalUsers: number = 0;
@@ -237,30 +302,55 @@ export class UserDashboardComponent implements OnInit {
   openAddForm(): void {
     this.isEditing = false;
     this.currentUser = this.getEmptyUser();
+    this.resetUserForm(this.currentUser);
     this.showForm = true;
   }
 
   openEditForm(user: User): void {
     this.isEditing = true;
     this.currentUser = { ...user };
+    this.resetUserForm(this.currentUser);
     this.showForm = true;
   }
 
   closeForm(): void {
     this.showForm = false;
+    this.formSubmitted = false;
     this.currentUser = this.getEmptyUser();
+    this.resetUserForm(this.currentUser);
   }
 
   saveUser(): void {
+    this.formSubmitted = true;
+
+    if (this.userForm.invalid) {
+      this.userForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.userForm.getRawValue();
+    const userToSave: User = {
+      id: this.currentUser.id,
+      name: formValue.name.trim(),
+      email: formValue.email.trim(),
+      role: formValue.role,
+      status: formValue.status as User['status'],
+      joinDate: this.currentUser.joinDate,
+      department: formValue.department
+    };
+
     if (this.isEditing) {
-      const index = this.users.findIndex(u => u.id === this.currentUser.id);
+      const index = this.users.findIndex(u => u.id === userToSave.id);
       if (index !== -1) {
-        this.users[index] = { ...this.currentUser };
+        this.users[index] = userToSave;
       }
     } else {
       const newId = Math.max(...this.users.map(u => u.id), 0) + 1;
-      this.currentUser.id = newId;
-      this.users.push({ ...this.currentUser });
+      this.users.push({
+        ...userToSave,
+        id: newId,
+        joinDate: new Date()
+      });
     }
 
     this.applyFiltersAndSort();
@@ -283,16 +373,39 @@ export class UserDashboardComponent implements OnInit {
   }
 
   // Helper methods
-  getEmptyUser(): User {
+  getEmptyUser(): UserDraft {
     return {
       id: 0,
       name: '',
       email: '',
-      role: this.roles[0],
-      status: 'active',
+      role: '',
+      status: '',
       joinDate: new Date(),
-      department: this.departments[0]
+      department: ''
     };
+  }
+
+  resetUserForm(user: UserDraft): void {
+    this.formSubmitted = false;
+    this.userForm.reset({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      status: user.status
+    });
+  }
+
+  isFieldInvalid(fieldName: keyof UserForm['controls']): boolean {
+    const control = this.userForm.controls[fieldName];
+
+    return control.invalid && (control.touched || this.formSubmitted);
+  }
+
+  hasFieldError(fieldName: keyof UserForm['controls'], errorName: string): boolean {
+    const control = this.userForm.controls[fieldName];
+
+    return control.hasError(errorName) && (control.touched || this.formSubmitted);
   }
 
   resetFilters(): void {
