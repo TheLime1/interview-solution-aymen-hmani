@@ -1,236 +1,54 @@
 <div class="dashboard-container">
   <h1>User Dashboard</h1>
-  
-  <!-- Statistics Section -->
-  <div class="statistics">
-    <div class="stat-card">
-      <h3>Total Users</h3>
-      <p class="stat-number">{{ totalUsers }}</p>
-    </div>
-    <div class="stat-card active">
-      <h3>Active Users</h3>
-      <p class="stat-number">{{ activeUsers }}</p>
-    </div>
-    <div class="stat-card inactive">
-      <h3>Inactive Users</h3>
-      <p class="stat-number">{{ inactiveUsers }}</p>
-    </div>
-  </div>
 
-  <!-- Filters Section -->
-  <div class="filters-section">
-    <h2>Filters</h2>
-    <div class="filters">
-      <div class="filter-group">
-        <label for="search">Search:</label>
-        <input 
-          id="search"
-          type="text" 
-          [(ngModel)]="searchTerm" 
-          (ngModelChange)="applyFiltersAndSort()"
-          placeholder="Search by name or email..."
-        />
-      </div>
+  <app-user-stats
+    [totalUsers]="totalUsers"
+    [activeUsers]="activeUsers"
+    [inactiveUsers]="inactiveUsers"
+  ></app-user-stats>
 
-      <div class="filter-group">
-        <label for="role">Role:</label>
-        <select id="role" [(ngModel)]="selectedRole" (ngModelChange)="applyFiltersAndSort()">
-          <option value="all">All Roles</option>
-          <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
-        </select>
-      </div>
+  <app-user-filters
+    [filters]="filters"
+    [roles]="roles"
+    [departments]="departments"
+    [statuses]="statuses"
+    (filtersChange)="updateFilters($event)"
+    (resetFilters)="resetFilters()"
+  ></app-user-filters>
 
-      <div class="filter-group">
-        <label for="department">Department:</label>
-        <select id="department" [(ngModel)]="selectedDepartment" (ngModelChange)="applyFiltersAndSort()">
-          <option value="all">All Departments</option>
-          <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label for="status">Status:</label>
-        <select id="status" [(ngModel)]="selectedStatus" (ngModelChange)="applyFiltersAndSort()">
-          <option value="all">All Statuses</option>
-          <option *ngFor="let status of statuses" [value]="status">{{ status | titlecase }}</option>
-        </select>
-      </div>
-
-      <button class="btn btn-secondary" (click)="resetFilters()">Reset Filters</button>
-    </div>
-  </div>
-
-  <!-- Actions Section -->
   <div class="actions-section">
     <button class="btn btn-primary" (click)="openAddForm()">Add New User</button>
     <span class="results-count">Showing {{ paginatedUsers.length }} of {{ displayedUsers.length }} users</span>
   </div>
 
-  <!-- Users Table -->
-  <div class="table-container">
-    <table class="users-table">
-      <thead>
-        <tr>
-          <th (click)="sortBy('name')" class="sortable">
-            Name {{ getSortIcon('name') }}
-          </th>
-          <th (click)="sortBy('email')" class="sortable">
-            Email {{ getSortIcon('email') }}
-          </th>
-          <th (click)="sortBy('role')" class="sortable">
-            Role {{ getSortIcon('role') }}
-          </th>
-          <th (click)="sortBy('department')" class="sortable">
-            Department {{ getSortIcon('department') }}
-          </th>
-          <th (click)="sortBy('status')" class="sortable">
-            Status {{ getSortIcon('status') }}
-          </th>
-          <th (click)="sortBy('joinDate')" class="sortable">
-            Join Date {{ getSortIcon('joinDate') }}
-          </th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let user of paginatedUsers">
-          <td>{{ user.name }}</td>
-          <td>{{ user.email }}</td>
-          <td>{{ user.role }}</td>
-          <td>{{ user.department }}</td>
-          <td>
-            <span 
-              class="status-badge" 
-              [class.active]="user.status === 'active'"
-              [class.inactive]="user.status === 'inactive'"
-            >
-              {{ user.status | titlecase }}
-            </span>
-          </td>
-          <td>{{ user.joinDate | date:'MMM d, y' }}</td>
-          <td class="actions">
-            <button class="btn-icon" (click)="toggleUserStatus(user)" title="Toggle Status">
-              {{ user.status === 'active' ? '⏸️' : '▶️' }}
-            </button>
-            <button class="btn-icon" (click)="openEditForm(user)" title="Edit">✏️</button>
-            <button class="btn-icon delete" (click)="deleteUser(user.id)" title="Delete">🗑️</button>
-          </td>
-        </tr>
-        <tr *ngIf="paginatedUsers.length === 0">
-          <td colspan="7" class="no-results">No users found matching the current filters.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <app-user-table
+    [users]="paginatedUsers"
+    [sortField]="sortField"
+    [sortDirection]="sortDirection"
+    (sort)="sortBy($event)"
+    (toggleStatus)="toggleUserStatus($event)"
+    (editUser)="openEditForm($event)"
+    (deleteUser)="deleteUser($event)"
+  ></app-user-table>
 
-  <!-- Pagination -->
-  <div class="pagination" *ngIf="totalPages > 1">
-    <button 
-      class="btn btn-secondary" 
-      (click)="previousPage()" 
-      [disabled]="currentPage === 1"
-    >
-      Previous
-    </button>
-    
-    <div class="page-numbers">
-      <button 
-        *ngFor="let page of getPageNumbers()" 
-        class="btn btn-page"
-        [class.active]="page === currentPage"
-        (click)="goToPage(page)"
-      >
-        {{ page }}
-      </button>
-    </div>
-    
-    <button 
-      class="btn btn-secondary" 
-      (click)="nextPage()" 
-      [disabled]="currentPage === totalPages"
-    >
-      Next
-    </button>
-  </div>
+  <app-user-pagination
+    *ngIf="totalPages > 1"
+    [currentPage]="currentPage"
+    [totalPages]="totalPages"
+    (previousPage)="previousPage()"
+    (nextPage)="nextPage()"
+    (pageChange)="goToPage($event)"
+  ></app-user-pagination>
 
-  <!-- Add/Edit Form Modal -->
-  <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <h2>{{ isEditing ? 'Edit User' : 'Add New User' }}</h2>
-      
-      <form [formGroup]="userForm" (ngSubmit)="saveUser()" novalidate>
-        <div class="form-group">
-          <label for="userName">Name:</label>
-          <input 
-            id="userName"
-            type="text" 
-            formControlName="name"
-            [class.invalid]="isFieldInvalid('name')"
-          />
-          <p class="field-error" *ngIf="hasFieldError('name', 'required')">
-            Name is required.
-          </p>
-        </div>
-
-        <div class="form-group">
-          <label for="userEmail">Email:</label>
-          <input 
-            id="userEmail"
-            type="email" 
-            formControlName="email"
-            [class.invalid]="isFieldInvalid('email')"
-          />
-          <p class="field-error" *ngIf="hasFieldError('email', 'required')">
-            Email is required.
-          </p>
-          <p class="field-error" *ngIf="hasFieldError('email', 'pattern')">
-            Enter a valid email address.
-          </p>
-        </div>
-
-        <div class="form-group">
-          <label for="userRole">Role:</label>
-          <select id="userRole" formControlName="role" [class.invalid]="isFieldInvalid('role')">
-            <option value="">Select a role</option>
-            <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
-          </select>
-          <p class="field-error" *ngIf="hasFieldError('role', 'required')">
-            Role is required.
-          </p>
-        </div>
-
-        <div class="form-group">
-          <label for="userDepartment">Department:</label>
-          <select id="userDepartment" formControlName="department" [class.invalid]="isFieldInvalid('department')">
-            <option value="">Select a department</option>
-            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
-          </select>
-          <p class="field-error" *ngIf="hasFieldError('department', 'required')">
-            Department is required.
-          </p>
-        </div>
-
-        <div class="form-group">
-          <label for="userStatus">Status:</label>
-          <select id="userStatus" formControlName="status" [class.invalid]="isFieldInvalid('status')">
-            <option value="">Select a status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <p class="field-error" *ngIf="hasFieldError('status', 'required')">
-            Status is required.
-          </p>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">
-            {{ isEditing ? 'Update' : 'Create' }}
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="closeForm()">
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <app-user-form-modal
+    *ngIf="showForm"
+    [isEditing]="isEditing"
+    [formSubmitted]="formSubmitted"
+    [userForm]="userForm"
+    [roles]="roles"
+    [departments]="departments"
+    (saveUser)="saveUser()"
+    (closeForm)="closeForm()"
+  ></app-user-form-modal>
 </div>
+

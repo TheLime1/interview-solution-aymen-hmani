@@ -1,0 +1,80 @@
+<div class="modal-overlay" (click)="closeForm.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>{{ isEditing ? 'Edit User' : 'Add New User' }}</h2>
+
+    <form [formGroup]="userForm" (ngSubmit)="saveUser.emit()" novalidate>
+      <div class="form-group">
+        <label for="userName">Name:</label>
+        <input
+          id="userName"
+          type="text"
+          formControlName="name"
+          [class.invalid]="isFieldInvalid('name')"
+        />
+        <p class="field-error" *ngIf="hasFieldError('name', 'required')">
+          Name is required.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="userEmail">Email:</label>
+        <input
+          id="userEmail"
+          type="email"
+          formControlName="email"
+          [class.invalid]="isFieldInvalid('email')"
+        />
+        <p class="field-error" *ngIf="hasFieldError('email', 'required')">
+          Email is required.
+        </p>
+        <p class="field-error" *ngIf="hasFieldError('email', 'pattern')">
+          Enter a valid email address.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="userRole">Role:</label>
+        <select id="userRole" formControlName="role" [class.invalid]="isFieldInvalid('role')">
+          <option value="">Select a role</option>
+          <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+        </select>
+        <p class="field-error" *ngIf="hasFieldError('role', 'required')">
+          Role is required.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="userDepartment">Department:</label>
+        <select id="userDepartment" formControlName="department" [class.invalid]="isFieldInvalid('department')">
+          <option value="">Select a department</option>
+          <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+        </select>
+        <p class="field-error" *ngIf="hasFieldError('department', 'required')">
+          Department is required.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="userStatus">Status:</label>
+        <select id="userStatus" formControlName="status" [class.invalid]="isFieldInvalid('status')">
+          <option value="">Select a status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <p class="field-error" *ngIf="hasFieldError('status', 'required')">
+          Status is required.
+        </p>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">
+          {{ isEditing ? 'Update' : 'Create' }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closeForm.emit()">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

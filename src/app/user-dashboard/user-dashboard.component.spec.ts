@@ -75,7 +75,10 @@ describe('UserDashboardComponent', () => {
   });
 
   it('should filter users by active status', () => {
-    component.selectedStatus = 'active';
+    component.filters = {
+      ...component.filters,
+      selectedStatus: 'active'
+    };
 
     component.applyFiltersAndSort();
 
@@ -84,7 +87,10 @@ describe('UserDashboardComponent', () => {
   });
 
   it('should filter users by inactive status and reset status filters', () => {
-    component.selectedStatus = 'inactive';
+    component.filters = {
+      ...component.filters,
+      selectedStatus: 'inactive'
+    };
     component.applyFiltersAndSort();
 
     expect(component.displayedUsers.length).toBe(component.inactiveUsers);
@@ -92,7 +98,7 @@ describe('UserDashboardComponent', () => {
 
     component.resetFilters();
 
-    expect(component.selectedStatus).toBe('all');
+    expect(component.filters.selectedStatus).toBe('all');
     expect(component.displayedUsers.length).toBe(component.users.length);
   });
 });

@@ -1,0 +1,56 @@
+<div class="table-container">
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th (click)="sort.emit('name')" class="sortable">
+          Name {{ getSortIcon('name') }}
+        </th>
+        <th (click)="sort.emit('email')" class="sortable">
+          Email {{ getSortIcon('email') }}
+        </th>
+        <th (click)="sort.emit('role')" class="sortable">
+          Role {{ getSortIcon('role') }}
+        </th>
+        <th (click)="sort.emit('department')" class="sortable">
+          Department {{ getSortIcon('department') }}
+        </th>
+        <th (click)="sort.emit('status')" class="sortable">
+          Status {{ getSortIcon('status') }}
+        </th>
+        <th (click)="sort.emit('joinDate')" class="sortable">
+          Join Date {{ getSortIcon('joinDate') }}
+        </th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users; trackBy: trackByUserId">
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+        <td>{{ user.department }}</td>
+        <td>
+          <span
+            class="status-badge"
+            [class.active]="user.status === 'active'"
+            [class.inactive]="user.status === 'inactive'"
+          >
+            {{ user.status | titlecase }}
+          </span>
+        </td>
+        <td>{{ user.joinDate | date:'MMM d, y' }}</td>
+        <td class="actions">
+          <button class="btn-icon" (click)="toggleStatus.emit(user)" title="Toggle Status">
+            {{ user.status === 'active' ? '⏸️' : '▶️' }}
+          </button>
+          <button class="btn-icon" (click)="editUser.emit(user)" title="Edit">✏️</button>
+          <button class="btn-icon delete" (click)="deleteUser.emit(user.id)" title="Delete">🗑️</button>
+        </td>
+      </tr>
+      <tr *ngIf="users.length === 0">
+        <td colspan="7" class="no-results">No users found matching the current filters.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
